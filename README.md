@@ -64,7 +64,7 @@ O projeto foi estruturado para destacar os seguintes pilares da POO:
 
 O diagrama abaixo representa a arquitetura do sistema, mostrando a relação entre as classes, interfaces e a estrutura de herança.
 
-![Diagrama de Classes do Sistema de Zoológico](docs/diagrama-uml.png)
+![Diagrama de Classes do Sistema de Zoológico](zoologico_uml.svg)
 
 ---
 ## Próximos Passos e Contribuições
