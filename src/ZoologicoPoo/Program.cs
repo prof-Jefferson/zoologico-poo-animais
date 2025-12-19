@@ -10,33 +10,190 @@ internal class Program
     static void Main(string[] args)
     {
         var caminhoArquivo = Path.Combine(AppContext.BaseDirectory, "animais.json");
-        var repo = new RepositorioAnimaisJson(caminhoArquivo);
-        var zoo = new Zoologico();
+        var repositorio = new RepositorioAnimaisJson(caminhoArquivo);
+        var zoologico = new Zoologico();
 
-        // Carregar animais salvos anteriormente
-        foreach (var a in repo.Carregar())
+        // 1) Carregar dados já salvos (se houver)
+        foreach (var animal in repositorio.Carregar())
         {
-            zoo.Adicionar(a);
+            zoologico.Adicionar(animal);
         }
 
-        // Se estiver vazio, cria alguns padrões
-        if (zoo.Animais.Count == 0)
+        // 2) Se estiver vazio, adiciona alguns animais padrão
+        if (zoologico.Animais.Count == 0)
         {
-            zoo.Adicionar(new Gato("Luna", new DateTime(2022, 5, 10), "Maria"));
-            zoo.Adicionar(new Cachorro("Rex", new DateTime(2021, 3, 2), "João"));
-            zoo.Adicionar(new Tilapia("Tilápia Azul", new DateTime(2023, 1, 1)));
-            zoo.Adicionar(new Pardal("Pardalzinho", new DateTime(2022, 9, 15)));
+            zoologico.Adicionar(new Gato("Luna", new DateTime(2022, 5, 10), "Maria"));
+            zoologico.Adicionar(new Cachorro("Rex", new DateTime(2021, 3, 2), "João"));
+            zoologico.Adicionar(new Tilapia("Tilápia Azul", new DateTime(2023, 1, 1)));
+            zoologico.Adicionar(new Pardal("Pardalzinho", new DateTime(2022, 9, 15)));
         }
 
-        Console.WriteLine("=== Animais carregados no zoológico ===");
-        foreach (var a in zoo.Animais)
+        // 3) Loop principal de menu
+        while (true)
         {
-            Console.WriteLine(a);
+            Console.Clear();
+            Console.WriteLine("=== ZOOLÓGICO POO ===");
+            Console.WriteLine("1 - Listar todos os animais");
+            Console.WriteLine("2 - Listar animais domésticos");
+            Console.WriteLine("3 - Listar animais por habitat");
+            Console.WriteLine("4 - Agrupar animais por tipo");
+            Console.WriteLine("5 - Remover animal por nome");
+            Console.WriteLine("0 - Sair");
+            Console.WriteLine();
+            Console.Write("Escolha uma opção: ");
+
+            var opcao = Console.ReadLine()?.Trim();
+
+            if (opcao == "0")
+            {
+                // Salva antes de sair
+                repositorio.Salvar(zoologico.Animais);
+                Console.WriteLine("\nEstado do zoológico salvo em arquivo. Encerrando...");
+                break;
+            }
+
+            Console.WriteLine();
+
+            switch (opcao)
+            {
+                case "1":
+                    ListarTodos(zoologico);
+                    break;
+
+                case "2":
+                    ListarDomesticos(zoologico);
+                    break;
+
+                case "3":
+                    ListarPorHabitat(zoologico);
+                    break;
+
+                case "4":
+                    ListarAgrupadosPorTipo(zoologico);
+                    break;
+
+                case "5":
+                    RemoverPorNome(zoologico);
+                    break;
+
+                default:
+                    Console.WriteLine("Opção inválida.");
+                    break;
+            }
+
+            Console.WriteLine("\nPressione ENTER para continuar...");
+            Console.ReadLine();
+        }
+    }
+
+    private static void ListarTodos(Zoologico zoologico)
+    {
+        Console.WriteLine("=== TODOS OS ANIMAIS ===");
+        if (zoologico.Animais.Count == 0)
+        {
+            Console.WriteLine("Nenhum animal cadastrado.");
+            return;
         }
 
-        // Salvar estado atual
-        repo.Salvar(zoo.Animais);
+        foreach (var animal in zoologico.Animais)
+        {
+            Console.WriteLine(animal);
+        }
+    }
 
-        Console.WriteLine($"\nEstado salvo em: {caminhoArquivo}");
+    private static void ListarDomesticos(Zoologico zoologico)
+    {
+        Console.WriteLine("=== ANIMAIS DOMÉSTICOS ===");
+
+        var domesticos = zoologico.ListarAnimaisDomesticos();
+
+        var encontrou = false;
+        foreach (var d in domesticos)
+        {
+            encontrou = true;
+            Console.WriteLine($"{d.Dono} é dono de {d.GetType().Name}");
+        }
+
+        if (!encontrou)
+        {
+            Console.WriteLine("Nenhum animal doméstico cadastrado.");
+        }
+    }
+
+    private static void ListarPorHabitat(Zoologico zoologico)
+    {
+        Console.WriteLine("=== LISTAR POR HABITAT ===");
+        Console.WriteLine("0 - Terrestre");
+        Console.WriteLine("1 - Aquático");
+        Console.WriteLine("2 - Aéreo");
+        Console.Write("Informe o código do habitat: ");
+
+        var entrada = Console.ReadLine();
+
+        if (!int.TryParse(entrada, out var codigo) ||
+            codigo < 0 || codigo > 2)
+        {
+            Console.WriteLine("Habitat inválido.");
+            return;
+        }
+
+        var habitat = (TipoHabitat)codigo;
+
+        var animais = zoologico.ListarAnimaisPorHabitat(habitat);
+
+        Console.WriteLine($"\nAnimais no habitat {habitat}:");
+        var encontrou = false;
+        foreach (var animal in animais)
+        {
+            encontrou = true;
+            Console.WriteLine(animal);
+        }
+
+        if (!encontrou)
+        {
+            Console.WriteLine("Nenhum animal encontrado nesse habitat.");
+        }
+    }
+
+    private static void ListarAgrupadosPorTipo(Zoologico zoologico)
+    {
+        Console.WriteLine("=== ANIMAIS AGRUPADOS POR TIPO ===");
+
+        var grupos = zoologico.ObterAnimaisAgrupadosPorTipo();
+
+        var encontrouGrupo = false;
+
+        foreach (var grupo in grupos)
+        {
+            encontrouGrupo = true;
+            Console.WriteLine($"\n[{grupo.Key.Name}]");
+            foreach (var animal in grupo)
+            {
+                Console.WriteLine($" - {animal}");
+            }
+        }
+
+        if (!encontrouGrupo)
+        {
+            Console.WriteLine("Nenhum animal cadastrado para agrupar.");
+        }
+    }
+
+    private static void RemoverPorNome(Zoologico zoologico)
+    {
+        Console.Write("Digite o nome do animal a remover: ");
+        var nome = Console.ReadLine()?.Trim();
+
+        if (string.IsNullOrWhiteSpace(nome))
+        {
+            Console.WriteLine("Nome inválido.");
+            return;
+        }
+
+        var removido = zoologico.Remover(nome);
+
+        Console.WriteLine(removido
+            ? $"Animal '{nome}' removido com sucesso."
+            : $"Animal '{nome}' não encontrado.");
     }
 }
