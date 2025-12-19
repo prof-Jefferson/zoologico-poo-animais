@@ -2,6 +2,7 @@
 using System.IO;
 using ZoologicoPoo.Domain;
 using ZoologicoPoo.Persistence;
+using System.Globalization;
 
 namespace ZoologicoPoo;
 
@@ -31,16 +32,14 @@ internal class Program
         // 3) Loop principal de menu
         while (true)
         {
-            Console.Clear();
             Console.WriteLine("=== ZOOLÓGICO POO ===");
             Console.WriteLine("1 - Listar todos os animais");
             Console.WriteLine("2 - Listar animais domésticos");
             Console.WriteLine("3 - Listar animais por habitat");
             Console.WriteLine("4 - Agrupar animais por tipo");
             Console.WriteLine("5 - Remover animal por nome");
+            Console.WriteLine("6 - Cadastrar novo animal");
             Console.WriteLine("0 - Sair");
-            Console.WriteLine();
-            Console.Write("Escolha uma opção: ");
 
             var opcao = Console.ReadLine()?.Trim();
 
@@ -74,6 +73,10 @@ internal class Program
 
                 case "5":
                     RemoverPorNome(zoologico);
+                    break;
+                
+                case "6":
+                    CadastrarAnimal(zoologico);
                     break;
 
                 default:
@@ -195,5 +198,80 @@ internal class Program
         Console.WriteLine(removido
             ? $"Animal '{nome}' removido com sucesso."
             : $"Animal '{nome}' não encontrado.");
+    }
+
+    private static void CadastrarAnimal(Zoologico zoologico)
+    {
+        Console.WriteLine("=== CADASTRO DE NOVO ANIMAL ===");
+        Console.WriteLine("1 - Gato");
+        Console.WriteLine("2 - Cachorro");
+        Console.WriteLine("3 - Tilápia");
+        Console.WriteLine("4 - Pardal");
+        Console.Write("Escolha o tipo (1-4): ");
+
+        var tipoOpcao = Console.ReadLine()?.Trim();
+
+        Console.Write("Nome do animal: ");
+        var nome = Console.ReadLine()?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(nome))
+        {
+            Console.WriteLine("Nome inválido. Cadastro cancelado.");
+            return;
+        }
+
+        Console.Write("Data de nascimento (dd/mm/aaaa): ");
+        var dataStr = Console.ReadLine();
+
+        if (!DateTime.TryParseExact(
+                dataStr,
+                "dd/MM/yyyy",
+                new CultureInfo("pt-BR"),
+                DateTimeStyles.None,
+                out var dataNascimento))
+        {
+            Console.WriteLine("Data inválida. Cadastro cancelado.");
+            return;
+        }
+
+        Animal? novo = null;
+
+        switch (tipoOpcao)
+        {
+            case "1": // Gato
+                Console.Write("Nome do dono: ");
+                var donoGato = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(donoGato))
+                {
+                    donoGato = "Dono desconhecido";
+                }
+                novo = new Gato(nome, dataNascimento, donoGato);
+                break;
+
+            case "2": // Cachorro
+                Console.Write("Nome do dono: ");
+                var donoCachorro = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(donoCachorro))
+                {
+                    donoCachorro = "Dono desconhecido";
+                }
+                novo = new Cachorro(nome, dataNascimento, donoCachorro);
+                break;
+
+            case "3": // Tilápia
+                novo = new Tilapia(nome, dataNascimento);
+                break;
+
+            case "4": // Pardal
+                novo = new Pardal(nome, dataNascimento);
+                break;
+
+            default:
+                Console.WriteLine("Tipo inválido. Cadastro cancelado.");
+                return;
+        }
+
+        zoologico.Adicionar(novo);
+        Console.WriteLine($"Animal '{nome}' cadastrado com sucesso!");
     }
 }
